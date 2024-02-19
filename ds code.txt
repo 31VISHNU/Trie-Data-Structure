@@ -1,0 +1,80 @@
+import PyPDF2#For accessing pdf
+from tkinter import *#for accessing all
+from tkinter import filedialog# for accessing file
+#Create an instance of tkinter frame
+kit=Tk()#Toolkit used for building GUI, instance of tkinter frame
+kit.geometry("500x500")#size
+text=Text(kit,width= 1000,height=1000)#text box
+fram =Frame(kit)#forming frame(grouping widgets)
+Label(fram,text='Type :').pack(side=LEFT)#widget implements a display box where you can place text, pack specifies location
+edit =Entry(fram)#To accept single line text
+edit.pack(side=LEFT, fill=BOTH, expand=1)#organise entry
+edit.focus_set()#focus on the specific widget
+butt =Button(fram,text='Find')#Button
+#location of box
+butt.pack(side=RIGHT)
+fram.pack(side=TOP)
+text.pack(pady=2)#Number of pixels to pad widget
+class TrieNode:#Class for trie data structure similar to structure in c
+   def __init__(self, char):
+        self.char = char
+        self.children = []
+        self.lastword= False
+def add(root,word):#add in trie 
+    node = root#root
+    for char in word:#for loop
+        found= False#if present in assigns false
+        for child in node.children:#for loop for child
+            if child.char == char:#checks with given word
+                node = child
+                found= True
+                break
+        if not found:#if not child
+            nn= TrieNode(char)#assigns values
+            node.children.append(nn)#adds to tree
+            node = nn#newly added character is nn
+    node.lastword= True
+def find_prefix(root):#find function
+    s=edit.get()#get word in search box
+    if s:#if value is got enters inside if
+       index='1.0'#assigning index as 1
+       while 1:
+          node = root#initial node is root
+          if not root.children:#if not present in as child returns false
+             return False
+          for char in s:
+              found= False#initial value false
+              for child in node.children:#if present as child
+                   if child.char == char:#if the word is found
+                      found = True#assigning as true
+                      index = text.search(s, index, nocase=1,stopindex=END)#retuns value when first match occurs
+                      lastidx ='%s+%dc' % (index, len(s))#returns a floating value
+                      text.tag_add('highlight', index,lastidx)#adding a tag
+                      text.tag_config('highlight', background='yellow')#highlighting with help of tags
+                      node = child#assigning node to child
+                      break
+          return True
+       edit.focus_set()  
+def open_pdf():#function for opening pdf
+   root = TrieNode(' ')#always root is empty in trie
+   file=filedialog.askopenfilename(title="Select a PDF", filetype=(("PDF files","*.pdf"),("All Files","*.*")))#file location
+   if file:#True when a file is open
+      pdf_file=PyPDF2.PdfFileReader(file)#Open the PDF File
+      page=pdf_file.getPage(0)#Select a Page to read
+      content=page.extractText()#Get the content of the Page
+      text.insert(1.0,content)#Add the content to TextBox
+      x=content.split()#spliting strings to add
+      for i in range(0,len(x)):
+          add(root,x[i])
+          butt.config(text ="Find", command =find_prefix(root))
+def clear_text():
+   text.delete(1.0, END)
+#menu bar
+mymenu=Menu(kit)#tkinter package
+kit.config(menu=mymenu)#access menu
+#Add dropdown to the Menu
+file_menu=Menu(mymenu)#floating menu
+mymenu.add_cascade(label="File",menu= file_menu)#Creates hierarchical menu i.e as parent menu
+file_menu.add_command(label="Open",command=open_pdf)#Add menu item
+file_menu.add_command(label="Clear",command=clear_text)#clear
+kit.mainloop()#infinite loop to run the application
